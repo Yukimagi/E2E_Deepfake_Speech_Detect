@@ -59,10 +59,12 @@
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script>
+
         window.onload = function() {
+            // 拿檔案
             var urlParams = new URLSearchParams(window.location.search);
             var file = urlParams.get('file');
-
+            // 音檔辨識
             $.ajax({
                 url: "submit",
                 type: "GET",
@@ -73,6 +75,7 @@
                     } else {
                         alert(result.message);
                     }
+                    // 返回上一頁
                     var previousPage = localStorage.getItem('previousPage');
                     window.location.href = previousPage;
                 }

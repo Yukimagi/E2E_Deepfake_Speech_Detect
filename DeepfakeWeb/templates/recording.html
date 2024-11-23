@@ -122,13 +122,14 @@
             </div>
         </footer>
         <script>
+            //錄製音訊
             const recordAudio = () => {
                 return new Promise(resolve => {
                     navigator.mediaDevices.getUserMedia({
                         audio: {
-                            sampleRate: 48000,
-                            channelCount: 2,
-                            volume: 1.0
+                            sampleRate: 48000, // 頻率
+                            channelCount: 2, // 左右聲道
+                            volume: 1.0 // 正常音量
                         }
                     }).then(stream => {
                         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -142,16 +143,16 @@
                         const height = canvas.height;
                         const amp = height / 2;
                         
-                        // 全局變數，保存累積音頻數據
+                        // 保存累積音頻數據
                         let cumulativeData = [];
 
-                        // This will process audio in small chunks and interleave stereo channels
+                        // 將音訊切小塊並交錯
                         jsNode.onaudioprocess = (event) => {
                             const audioBuffer = event.inputBuffer;
                             const leftChannelData = audioBuffer.getChannelData(0);
                             const rightChannelData = audioBuffer.getChannelData(1);
 
-                            // Interleave left and right channels into one
+                            // 左右聲道合併
                             const allData = interleaveLeftAndRight(leftChannelData, rightChannelData);
                             audioChunks.push(...allData);
                             // 更新累積數據
@@ -171,16 +172,13 @@
                                 mediaNode.disconnect();
                                 
 
-                                // Create WAV file from audio data
+                                // WAV
                                 const wavBuffer = createWavFile(audioChunks);
                                 const audioBlob = new Blob([new Uint8Array(wavBuffer)], { type: 'audio/wav' });
                                 const audioUrl = URL.createObjectURL(audioBlob);
                                 const audio = new Audio(audioUrl);
 
-                                // Display waveform
-                                // drawWaveform(audioChunks);
-
-                                // File upload
+                                // 上傳檔案
                                 const formData = new FormData();
                                 formData.append('file', audioBlob, 'check.wav');
 
@@ -207,7 +205,6 @@
                 });
             };
 
-            // Helper function to create ScriptProcessorNode
             function createJSNode(audioContext) {
                 const BUFFER_SIZE = 4096;
                 const INPUT_CHANNEL_COUNT = 2;
@@ -217,7 +214,6 @@
                 return creator.call(audioContext, BUFFER_SIZE, INPUT_CHANNEL_COUNT, OUTPUT_CHANNEL_COUNT);
             }
 
-            // Interleave left and right channels into one array
             function interleaveLeftAndRight(left, right) {
                 const totalLength = left.length + right.length;
                 const data = new Float32Array(totalLength);
@@ -231,13 +227,13 @@
                 return data;
             }
 
-            // Create WAV file from interleaved audio data
+            // 建立 WAV
             function createWavFile(audioData) {
                 const WAV_HEAD_SIZE = 44;
                 const buffer = new ArrayBuffer(audioData.length * 2 + WAV_HEAD_SIZE);
                 const view = new DataView(buffer);
 
-                // Write WAV header
+                // WAV 頭
                 writeUTFBytes(view, 0, 'RIFF');
                 view.setUint32(4, 44 + audioData.length * 2, true);
                 writeUTFBytes(view, 8, 'WAVE');
@@ -252,7 +248,7 @@
                 writeUTFBytes(view, 36, 'data');
                 view.setUint32(40, audioData.length * 2, true);
 
-                // Write PCM samples
+                // PCM
                 let index = 44;
                 const volume = 1;
                 for (let i = 0; i < audioData.length; i++) {
@@ -263,13 +259,13 @@
                 return buffer;
             }
 
-            // Write string to DataView
             function writeUTFBytes(view, offset, string) {
                 for (let i = 0; i < string.length; i++) {
                     view.setUint8(offset + i, string.charCodeAt(i));
                 }
             }
 
+            // 開始錄製按鈕
             document.getElementById('startButton').addEventListener('click', async () => {
             const recorder = await recordAudio();
             recorder.start();
@@ -286,6 +282,7 @@
             }, 6000);  // 6000 毫秒 = 6 秒
             });
 
+            // 繪製聲波圖
             function drawWaveform(data) {
                 const canvas = document.getElementById('waveform');
                 const ctx = canvas.getContext('2d');
@@ -325,9 +322,10 @@
 
             
             function submit1() {
-                
+                // 紀錄目前頁面
                 localStorage.setItem('previousPage', window.location.href);
 
+                // 傳檔案
                 var filePath = './static/check.wav';
                 window.location.href = 'loading.html?file=' + encodeURIComponent(filePath);
             }
